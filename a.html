@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
@@ -12,10 +12,70 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
   <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #4B6BFB 0%, #8C5FFF 100%);
+      --bg-color: #f8f9ff;
+      --container-bg: #ffffff;
+      --text-color: #333;
+      --primary-color: #6B5FFF;
+      --primary-hover: #5646FF;
+      --input-border: #e0e4ff;
+      --response-bg: #f5f6ff;
+      --code-bg: #282c34;
+
+      --title-color: #6B5FFF;
+      --button-text: #ffffff;
+      --placeholder-color: #9BA1FF;
+      --button-bg: #6B5FFF;
+      --button-hover: #5646FF;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1a1a2e;
+      --container-bg: #2d2d3f;
+      --text-color: #e0e0ff;
+      --primary-color: #8C5FFF;
+      --primary-hover: #7B4FFF;
+      --input-border: #3d3d4f;
+      --response-bg: #2a2a3c;
+      --code-bg: #1e1e2e;
+
+      --title-color: #8C5FFF;
+      --button-text: #ffffff;
+      --placeholder-color: #9BA1FF;
+      --button-bg: #8C5FFF;
+      --button-hover: #7B4FFF;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-gradient);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(45deg);
+    }
+
+
     body {
       font-family: 'Roboto', sans-serif;
-      background: #f5f5f5;
-      color: #333;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s ease;
       margin: 0;
       padding: 0;
       display: flex;
@@ -28,17 +88,22 @@
       max-width: 800px;
       width: 100%;
       padding: 40px;
-      background-color: #ffffff;
+      background-color: var(--container-bg);
+      color: var(--text-color);
+      transition: all 0.3s ease;
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 30px rgba(107, 95, 255, 0.1);
       text-align: center;
       position: relative;
     }
 
     h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      color: #4A90E2;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
       margin-bottom: 30px;
     }
 
@@ -50,9 +115,9 @@
 
     .mode-button {
       padding: 10px 20px;
-      border: 2px solid #4A90E2;
-      background-color: #fff;
-      color: #4A90E2;
+      border: 2px solid var(--primary-color);
+      background-color: transparent;
+      color: var(--primary-color);
       font-size: 16px;
       font-weight: 500;
       cursor: pointer;
@@ -68,8 +133,9 @@
     }
 
     .mode-button.active {
-      background-color: #4A90E2;
-      color: #fff;
+      background: var(--primary-gradient);
+      color: var(--button-text);
+      border: none;
     }
 
     .form-group {
@@ -81,19 +147,26 @@
     }
 
     input[type="text"] {
+      background-color: var(--container-bg);
+      color: var(--text-color);
       flex-grow: 1;
       padding: 15px;
-      border: 1px solid #ccc;
+      border: 2px solid var(--input-border);
       border-radius: 50px;
       font-size: 16px;
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
-      transition: border-color 0.3s;
+      transition: all 0.3s ease;
+    }
+
+
+    input[type="text"]::placeholder {
+      color: var(--placeholder-color);
     }
 
     input[type="text"]:focus {
-      border-color: #4A90E2;
-      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(107, 95, 255, 0.2);
     }
+
 
     button {
       padding: 14px 20px;
@@ -107,6 +180,25 @@
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
+    button[type="submit"] {
+      background: var(--primary-gradient);
+      color: var(--button-text);
+      padding: 14px 30px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(107, 95, 255, 0.3);
+    }
+
+
     button:hover {
       background-color: #357ABD;
       transform: translateY(-2px);
@@ -117,24 +209,25 @@
     }
 
     .mic-button {
-      font-size: 24px;
+      background: var(--primary-gradient);
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background-color: #4A90E2;
-      color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+      transition: all 0.3s ease;
       margin: 20px auto;
+      color: white;
     }
 
+
     .mic-button:hover {
-      background-color: #357ABD;
       transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(107, 95, 255, 0.3);
     }
+
 
     .mic-button.listening {
       animation: pulse 1.5s infinite;
@@ -157,21 +250,20 @@
     #response {
       margin-top: 30px;
       padding: 20px;
-      background: #f0f0f0;
+      background-color: var(--response-bg);
       border-radius: 15px;
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
       font-size: 16px;
       line-height: 1.6;
-      white-space: pre-wrap;
-      color: #333;
       text-align: left;
     }
 
+
+    /* 코드 블록 스타일 업데이트 */
     .code-block {
-      position: relative;
-      background: #282c34;
-      border-radius: 8px;
+      background: var(--code-bg);
+      border-radius: 12px;
       margin: 20px 0;
+      border: 1px solid var(--primary-color);
     }
 
     .code-block pre {
@@ -187,28 +279,15 @@
     }
 
     .language-label {
-      position: absolute;
-      top: 0;
-      right: 0;
-      padding: 5px 10px;
-      background: #4A90E2;
-      color: #fff;
-      font-size: 12px;
-      border-radius: 0 8px 0 8px;
+      background: var(--primary-gradient);
+      padding: 5px 15px;
+      border-radius: 0 12px 0 12px;
     }
 
     .copy-button {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      padding: 5px 10px;
-      background: #4A90E2;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+      background: var(--primary-gradient);
+      padding: 8px 15px;
+      border-radius: 6px;
     }
 
     .copy-button:hover {
@@ -219,7 +298,10 @@
 
 <body>
   <div class="container">
-    <h1>ChatGPT에게 질문하기</h1>
+    <button class="theme-toggle" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+    <h1>무엇이든지 질문하세요!</h1>
     <div class="mode-selector">
       <button id="textModeButton" class="mode-button active">텍스트</button>
       <button id="realtimeModeButton" class="mode-button">실시간</button>
@@ -237,6 +319,39 @@
     <div id="response"></div>
   </div>
   <script>
+
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+
+    // 테마 토글 함수
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    // 아이콘 업데이트 함수
+    function updateThemeIcon(theme) {
+      if (theme === 'dark') {
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+    }
+
+    // 초기 테마 설정
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    // 이벤트 리스너 추가
+    themeToggle.addEventListener('click', toggleTheme);
+
     const chatForm = document.getElementById('chatForm');
     const userInput = document.getElementById('userInput');
     const responseDiv = document.getElementById('response');
@@ -346,7 +461,7 @@
         recognition.start();
 
         if (isRealtimeMode) {
-          socket = new WebSocket('ws://localhost:8080/chat/stream');
+          socket = new WebSocket('ws://localhost:9090/chat/stream');
           socket.onopen = () => {
             console.log('WebSocket 연결 성공');
           };
@@ -381,7 +496,7 @@
       responseDiv.textContent = '응답을 기다리는 중...';
 
       try {
-        const gptResponse = await fetch('http://localhost:8080/api/chatgpt/rest/completion/chat', {
+        const gptResponse = await fetch('http://localhost:9090/api/chatgpt/rest/completion/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
