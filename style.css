@@ -41,29 +41,30 @@ body {
   padding: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(107, 95, 255, 0.1);
 }
 
 .container {
   max-width: 800px;
   width: 100%;
-  padding: 40px;
+  padding: 20px;
+  margin: 15px;
+  border-radius: 10px;
   background-color: var(--container-bg);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(107, 95, 255, 0.1);
   text-align: center;
   position: relative;
 }
 
 h1 {
-  font-size: 32px;
+  margin-top: 60px;
+  font-size: 25px;
   font-weight: 700;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .theme-toggle {
@@ -92,11 +93,12 @@ h1 {
 .mode-selector {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
 }
 
 .mode-button {
-  padding: 10px 20px;
+  width: 120px;
+  height: 45px;
   border: 2px solid var(--primary-color);
   background-color: transparent;
   color: var(--primary-color);
@@ -107,11 +109,11 @@ h1 {
 }
 
 .mode-button:first-child {
-  border-radius: 20px 0 0 20px;
+  border-radius: 12px 0 0 12px;
 }
 
 .mode-button:last-child {
-  border-radius: 0 20px 20px 0;
+  border-radius: 0 12px 12px 0;
 }
 
 .mode-button.active {
@@ -124,7 +126,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 5px;
   margin-bottom: 20px;
 }
 
@@ -132,9 +134,9 @@ input[type="text"] {
   background-color: var(--container-bg);
   color: var(--text-color);
   flex-grow: 1;
-  padding: 15px;
+  padding: 12px;
   border: 2px solid var(--input-border);
-  border-radius: 50px;
+  border-radius: 15px;
   font-size: 16px;
   transition: all 0.3s ease;
 }
@@ -151,11 +153,12 @@ input[type="text"]:focus {
 button[type="submit"] {
   background: var(--primary-gradient);
   color: var(--button-text);
-  padding: 14px 30px;
+  padding: 12px 30px;
   border: none;
-  border-radius: 50px;
+  border-radius: 15px;
   font-size: 16px;
   font-weight: 500;
+  white-space : nowrap;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -167,15 +170,15 @@ button[type="submit"]:hover {
 
 .mic-button {
   background: var(--primary-gradient);
-  width: 60px;
-  height: 60px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin: 20px auto;
+  margin: 50px auto;
   color: white;
 }
 
@@ -201,11 +204,12 @@ button[type="submit"]:hover {
 }
 
 #response {
-  margin-top: 30px;
+  margin-top: 10px;
+  min-height: 5px;
   padding: 20px;
   background-color: var(--response-bg);
   border-radius: 15px;
-  font-size: 16px;
+  font-size: 12px;
   line-height: 1.6;
   text-align: left;
 }
