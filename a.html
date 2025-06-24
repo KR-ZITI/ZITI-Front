@@ -461,7 +461,7 @@
         recognition.start();
 
         if (isRealtimeMode) {
-          socket = new WebSocket('ws://localhost:9090/chat/stream');
+          socket = new WebSocket('wss://taropick.co.kr/api/ws/view/3');
           socket.onopen = () => {
             console.log('WebSocket 연결 성공');
           };

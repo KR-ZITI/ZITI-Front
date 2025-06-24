@@ -1,43 +1,68 @@
 <!DOCTYPE html>
 <html lang="ko" data-theme="light">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ChatGPT 질문하기</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-  <link rel="stylesheet" href="libs/github.min.css">
-  <script src="libs/highlight.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <div class="container">
+    <!-- 테마 토글 버튼 (좌측 상단) -->
     <button class="theme-toggle" id="themeToggle">
       <i class="fas fa-moon"></i>
     </button>
+
+    <!-- 사용자 아이콘 (우측 상단) -->
+    <div class="account-icon" id="accountIcon">
+      <i class="fas fa-user-circle"></i>
+    </div>
+    <div class="account-dropdown" id="accountDropdown">
+      <div id="authSection">
+        <input type="email" id="emailInput" placeholder="이메일" />
+        <input type="password" id="passwordInput" placeholder="비밀번호" />
+        <button id="signupButton">회원가입</button>
+        <button id="loginButton">로그인</button>
+      </div>
+      <div id="userSection" style="display: none;">
+        <span id="userEmail"></span>
+        <button id="logoutButton">로그아웃</button>
+      </div>
+    </div>
+
     <h1>무엇이든지 질문하세요!</h1>
+
     <div class="mode-selector">
-      <button id="screenshotButton" class="mode-button">스크린샷</button>
       <button id="textModeButton" class="mode-button active">텍스트</button>
       <button id="realtimeModeButton" class="mode-button">실시간</button>
     </div>
+
     <div class="mic-button" id="micButton">
-      <i class="fas fa-microphone fa-2x"></i>
+      <i class="fas fa-microphone"></i>
     </div>
+
     <form id="chatForm">
       <div class="form-group">
-        <input type="text" id="userInput" placeholder="질문을 입력하세요..." required>
-        <button type="submit" id="submitButton">전송</button>
+        <input type="text" id="userInput" placeholder="질문을 입력하세요..." required />
+        <button type="submit" id="submitButton">
+          <i class="fas fa-paper-plane"></i> 전송
+        </button>
+        <button type="button" id="screenshotButton">
+          <i class="fas fa-camera"></i> 스샷
+        </button>
+        <button type="button" id="historyToggleButton">
+          <i class="fas fa-history"></i> 대화 기록
+        </button>
       </div>
     </form>
+
+    <div class="chat-history" id="chatHistory" style="display: none;"></div>
     <div id="response"></div>
   </div>
-  <script src="popup.js"></script>
-</body>
 
+ <!-- 바디 맨 아래 -->
+<script src="popup.js"></script>
+</body>
 </html>

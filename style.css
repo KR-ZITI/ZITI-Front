@@ -1,3 +1,5 @@
+/* ✅ 스타일 개선된 style.css (다크/라이트 테마 + 버튼 정렬 + 음영 + 사용자 영역 개선) */
+
 :root {
   --primary-gradient: linear-gradient(135deg, #4B6BFB 0%, #8C5FFF 100%);
   --bg-color: #f8f9ff;
@@ -8,7 +10,6 @@
   --input-border: #e0e4ff;
   --response-bg: #f5f6ff;
   --code-bg: #282c34;
-
   --title-color: #6B5FFF;
   --button-text: #ffffff;
   --placeholder-color: #9BA1FF;
@@ -25,7 +26,6 @@
   --input-border: #3d3d4f;
   --response-bg: #2a2a3c;
   --code-bg: #1e1e2e;
-
   --title-color: #8C5FFF;
   --button-text: #ffffff;
   --placeholder-color: #9BA1FF;
@@ -41,216 +41,349 @@ body {
   padding: 0;
   display: flex;
   justify-content: center;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(107, 95, 255, 0.1);
+  align-items: center;
+  min-height: 100vh;
 }
 
 .container {
-  max-width: 800px;
+  max-width: 600px;
   width: 100%;
-  padding: 20px;
-  margin: 15px;
-  border-radius: 10px;
+  padding: 30px 25px;
+  border-radius: 16px;
   background-color: var(--container-bg);
-  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   position: relative;
-}
-
-h1 {
-  margin-top: 60px;
-  font-size: 25px;
-  font-weight: 700;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin-bottom: 25px;
-}
-
-.theme-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: var(--primary-gradient);
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
   transition: all 0.3s ease;
 }
 
-.theme-toggle:hover {
-  transform: rotate(45deg);
+h1 {
+  font-size: 22px;
+  margin-bottom: 25px;
+  background: var(--primary-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* 테마 버튼을 왼쪽 상단으로 */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.3s;
+}
+
+.account-icon {
+  position: absolute;
+  top: 20px;
+  right: 15px;
+  font-size: 24px;
+  color: var(--primary-color);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.account-dropdown {
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  padding: 15px;
+  min-width: 200px;
+  max-width: 220px;
+  z-index: 99;
+}
+
+.account-dropdown.show {
+  display: block;
+}
+
+#authSection input,
+#userSection span {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--container-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-color);
+  box-sizing: border-box;
+}
+
+#authSection button,
+#userSection button {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  margin-top: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+#authSection button:hover,
+#userSection button:hover {
+  opacity: 0.85;
 }
 
 .mode-selector {
   display: flex;
   justify-content: center;
-  margin-bottom: 50px;
+  margin: 20px 0;
 }
 
 .mode-button {
-  width: 120px;
-  height: 45px;
+  flex: 1;
+  max-width: 120px;
+  padding: 10px 0;
   border: 2px solid var(--primary-color);
-  background-color: transparent;
+  border-radius: 12px;
+  background: transparent;
   color: var(--primary-color);
-  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.mode-button:first-child {
-  border-radius: 12px 0 0 12px;
-}
-
-.mode-button:last-child {
-  border-radius: 0 12px 12px 0;
-}
-
 .mode-button.active {
   background: var(--primary-gradient);
-  color: var(--button-text);
+  color: white;
   border: none;
+}
+
+.mic-button {
+  margin: 40px auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mic-button.listening {
+  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 0 8px rgba(107, 95, 255, 0.3);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(107, 95, 255, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(107, 95, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(107, 95, 255, 0);
+  }
+}
+
+.mic-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(107, 95, 255, 0.4);
 }
 
 .form-group {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin: 20px 0 10px;
 }
 
 input[type="text"] {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 14px;
   background-color: var(--container-bg);
   color: var(--text-color);
-  flex-grow: 1;
-  padding: 12px;
-  border: 2px solid var(--input-border);
-  border-radius: 15px;
-  font-size: 16px;
-  transition: all 0.3s ease;
 }
 
 input[type="text"]::placeholder {
   color: var(--placeholder-color);
 }
 
-input[type="text"]:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(107, 95, 255, 0.2);
-}
-
-button[type="submit"] {
-  background: var(--primary-gradient);
-  color: var(--button-text);
-  padding: 12px 30px;
+button[type="submit"],
+#screenshotButton,
+#historyToggleButton {
+  padding: 12px 20px;
   border: none;
-  border-radius: 15px;
-  font-size: 16px;
-  font-weight: 500;
-  white-space : nowrap;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background: var(--primary-gradient);
+  color: white;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.3s ease;
 }
 
-button[type="submit"]:hover {
+button:hover,
+#screenshotButton:hover,
+#historyToggleButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(107, 95, 255, 0.3);
 }
 
-.mic-button {
-  background: var(--primary-gradient);
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin: 50px auto;
-  color: white;
-}
-
-.mic-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(107, 95, 255, 0.3);
-}
-
-.mic-button.listening {
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(74, 144, 226, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(74, 144, 226, 0);
-  }
-}
-
 #response {
-  margin-top: 10px;
-  min-height: 5px;
-  padding: 20px;
   background-color: var(--response-bg);
-  border-radius: 15px;
-  font-size: 12px;
-  line-height: 1.6;
+  padding: 15px;
+  border-radius: 10px;
+  min-height: 60px;
+  font-size: 13px;
+  line-height: 1.5;
   text-align: left;
+  margin-top: 15px;
 }
 
 .code-block {
-  background: var(--code-bg);
-  border-radius: 12px;
-  margin: 20px 0;
-  border: 1px solid var(--primary-color);
-}
-
-.code-block pre {
-  padding: 20px;
-  margin: 0;
+  color: var(--text-color, #000);
+  border-radius: 8px;
+  margin: 1em 0;
+  padding: 1em;
+  position: relative;
+  font-size: 0.9em;
   overflow-x: auto;
 }
 
 .code-block code {
-  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: 'Source Code Pro', monospace;
 }
 
 .language-label {
-  background: var(--primary-gradient);
-  padding: 5px 15px;
-  border-radius: 0 12px 0 12px;
-  color: white;
+  position: absolute;
+  top: 0.5em;
+  right: 1em;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: #999;
 }
 
 .copy-button {
-  background: var(--primary-gradient);
-  padding: 8px 15px;
-  border-radius: 6px;
-  color: white;
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+  font-size: 0.85em; /* 기존 0.75 → 키움 */
+  padding: 6px 12px; /* 기존보다 넉넉하게 */
+  background-color: #ddd;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
-  margin: 10px;
-  transition: 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+/* 라이트 테마에서 코드 블럭을 밝은 배경으로 고정 */
+[data-theme='light'] .code-block {
+  background-color: #f4f4f4; /* ✅ 밝은 회색 */
+  color: #111;               /* ✅ 어두운 글자색 */
+}
+
+[data-theme='light'] .copy-button {
+  background-color: #eee;
+  color: #111;
+}
+
+/* 라이트/다크 테마 대응 */
+[data-theme='dark'] .code-block {
+  background-color: #282c34;
+  color: #f8f8f2;
+}
+
+[data-theme='dark'] .copy-button {
+  background-color: #444;
+  color: #fff;
 }
 
 .copy-button:hover {
-  background-color: #357ABD;
+  background-color: #ccc;
+  transform: scale(1.05);
+}
+
+.chat-history {
+  max-height: 120px;
+  overflow-y: auto;
+  background: var(--response-bg);
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 10px;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chat-history div {
+  padding: 5px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.chat-history div:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.screenshot-preview {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 30vw;
+  max-width: 200px;
+  height: auto;
+  transform: translate(-50%, -50%);
+  border: 3px solid white;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  transition: all 0.8s ease;
+  opacity: 1;
+}
+
+strong {
+  font-weight: 700; /* 일반적으로 bold는 700 */
+}
+
+@keyframes shrinkAndFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  70% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
 }

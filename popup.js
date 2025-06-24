@@ -1,185 +1,207 @@
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = themeToggle.querySelector('i');
+document.addEventListener("DOMContentLoaded", () => {
+  const accountIcon = document.getElementById("accountIcon");
+  const accountDropdown = document.getElementById("accountDropdown");
 
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  updateThemeIcon(newTheme);
-}
-
-function updateThemeIcon(theme) {
-  if (theme === 'dark') {
-    themeIcon.classList.remove('fa-moon');
-    themeIcon.classList.add('fa-sun');
-  } else {
-    themeIcon.classList.remove('fa-sun');
-    themeIcon.classList.add('fa-moon');
-  }
-}
-
-const savedTheme = localStorage.getItem('theme') || 'light';
-document.documentElement.setAttribute('data-theme', savedTheme);
-updateThemeIcon(savedTheme);
-themeToggle.addEventListener('click', toggleTheme);
-
-const chatForm = document.getElementById('chatForm');
-const userInput = document.getElementById('userInput');
-const responseDiv = document.getElementById('response');
-const micButton = document.getElementById('micButton');
-const textModeButton = document.getElementById('textModeButton');
-const realtimeModeButton = document.getElementById('realtimeModeButton');
-const screenshotButton = document.getElementById('screenshotButton');
-
-let isListening = false;
-let recognition;
-let isRealtimeMode = false;
-let socket;
-let silenceTimer;
-let lastTranscript = '';
-
-function initSpeechRecognition() {
-  if (!('webkitSpeechRecognition' in window)) {
-    console.log("❌ 이 브라우저는 음성 인식을 지원하지 않습니다.");
-    micButton.style.display = 'none';
+  if (!accountIcon || !accountDropdown) {
+    console.warn("accountIcon 또는 accountDropdown 요소를 찾을 수 없습니다.");
     return;
   }
 
-  recognition = new webkitSpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'ko-KR';
+  let isDropdownOpen = false;
 
-  recognition.onresult = function (event) {
-    let interimTranscript = '';
-    let finalTranscript = '';
+  accountIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    isDropdownOpen = !isDropdownOpen;
+    accountDropdown.classList.toggle("show", isDropdownOpen);
+  });
 
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        finalTranscript += event.results[i][0].transcript;
-      } else {
-        interimTranscript += event.results[i][0].transcript;
-      }
+  document.addEventListener("click", (e) => {
+    if (!accountDropdown.contains(e.target) && !accountIcon.contains(e.target)) {
+      isDropdownOpen = false;
+      accountDropdown.classList.remove("show");
     }
+  });
 
-    const currentTranscript = finalTranscript || interimTranscript;
-    userInput.value = currentTranscript;
+  const API_URL = 'https://quarrelsome-imojean-beargame-76ebfcd2.koyeb.app';
 
-    if (currentTranscript !== lastTranscript) {
-      lastTranscript = currentTranscript;
-      clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(() => {
-        if (isRealtimeMode) {
-          sendMessage(currentTranscript);
-        }
-      }, 3000);
-    }
-  };
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = themeToggle.querySelector('i');
 
-  recognition.onend = () => {
-    micButton.classList.remove('listening');
-    isListening = false;
-    if (!isRealtimeMode && userInput.value.trim()) {
-      sendMessage(userInput.value);
-    }
-  };
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const signupButton = document.getElementById('signupButton');
+  const loginButton = document.getElementById('loginButton');
+  const logoutButton = document.getElementById('logoutButton');
+  const userEmail = document.getElementById('userEmail');
+  const authSection = document.getElementById('authSection');
+  const userSection = document.getElementById('userSection');
 
-  recognition.onerror = (event) => {
-    console.error('음성 인식 오류:', event.error);
-    micButton.classList.remove('listening');
-    isListening = false;
-  };
-}
+  const chatForm = document.getElementById('chatForm');
+  const userInput = document.getElementById('userInput');
+  const responseDiv = document.getElementById('response');
+  const micButton = document.getElementById('micButton');
+  const textModeButton = document.getElementById('textModeButton');
+  const realtimeModeButton = document.getElementById('realtimeModeButton');
+  const screenshotButton = document.getElementById('screenshotButton');
+  const historyToggleButton = document.getElementById('historyToggleButton');
+  const chatHistory = document.getElementById('chatHistory');
 
-function startVoiceRecognition() {
-  if (!recognition) return;
+  let isRealtimeMode = false;
+  let isListening = false;
+  let recognition, socket, silenceTimer, lastTranscript = '';
+  const messageHistory = [];
 
-  if (isListening) {
-    recognition.stop();
-    return;
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeIcon(next);
   }
 
-  micButton.classList.add('listening');
-  isListening = true;
-  userInput.value = '';
-  recognition.start();
-
-  if (isRealtimeMode) {
-    socket = new WebSocket('ws://localhost:9090/chat/stream');
-    socket.onopen = () => console.log('WebSocket 연결 성공');
-    socket.onmessage = (event) => {
-      responseDiv.textContent += event.data;
-    };
-    socket.onerror = (error) => console.error('WebSocket 오류:', error);
-    socket.onclose = () => console.log('WebSocket 연결 종료');
+  function updateThemeIcon(theme) {
+    if (theme === 'dark') {
+      themeIcon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+      themeIcon.classList.replace('fa-sun', 'fa-moon');
+    }
   }
-}
 
-micButton.addEventListener('click', async () => {
-  try {
-    await navigator.mediaDevices.getUserMedia({ audio: true });
-    startVoiceRecognition();
-  } catch (err) {
-    alert("❌ 마이크 권한 요청 실패: " + err.message);
+  themeToggle.addEventListener('click', toggleTheme);
+  updateThemeIcon(localStorage.getItem('theme') || 'light');
+
+  accountIcon.addEventListener('click', () => {
+    accountDropdown.classList.toggle('show');
+  });
+
+  const token = localStorage.getItem('atk');
+  const email = localStorage.getItem('email');
+  if (token && email) {
+    authSection.style.display = 'none';
+    userSection.style.display = 'block';
+    userEmail.textContent = email;
   }
-});
 
-textModeButton.addEventListener('click', () => {
-  isRealtimeMode = false;
-  textModeButton.classList.add('active');
-  realtimeModeButton.classList.remove('active');
-  if (socket) socket.close();
-});
+  signupButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) return alert('입력해주세요');
 
-realtimeModeButton.addEventListener('click', () => {
-  isRealtimeMode = true;
-  realtimeModeButton.classList.add('active');
-  textModeButton.classList.remove('active');
-});
-
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  sendMessage(userInput.value);
-});
-
-async function sendMessage(message) {
-  if (!message.trim()) return;
-  responseDiv.textContent = '응답을 기다리는 중...';
-
-  try {
-    const gptResponse = await fetch('http://localhost:9090/api/chatgpt/rest/completion/chat', {
+    const res = await fetch(`${API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message })
+      body: JSON.stringify({ email, password })
     });
 
-    if (!gptResponse.ok) throw new Error('ChatGPT 서버 응답 오류');
+    alert(res.ok ? '회원가입 성공' : '회원가입 실패');
+  });
 
-    const gptData = await gptResponse.json();
-    if (gptData.messages?.length > 0) {
-      const gptMessage = gptData.messages[0].message;
-      displayResponse(gptMessage);
+  loginButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('atk', data.atk);
+      localStorage.setItem('rtk', data.rtk);
+      localStorage.setItem('email', email);
+      authSection.style.display = 'none';
+      userSection.style.display = 'block';
+      userEmail.textContent = email;
     } else {
-      responseDiv.textContent = 'messages 필드를 찾을 수 없습니다.';
+      alert('로그인 실패');
     }
-  } catch (error) {
-    responseDiv.textContent = '오류 발생: ' + error.message;
-    console.error(error);
+  });
+
+  logoutButton.addEventListener('click', () => {
+    localStorage.removeItem('atk');
+    localStorage.removeItem('rtk');
+    localStorage.removeItem('email');
+    authSection.style.display = 'block';
+    userSection.style.display = 'none';
+  });
+
+  textModeButton.addEventListener('click', () => {
+    isRealtimeMode = false;
+    textModeButton.classList.add('active');
+    realtimeModeButton.classList.remove('active');
+    if (socket) socket.close();
+  });
+
+  realtimeModeButton.addEventListener('click', () => {
+    isRealtimeMode = true;
+    realtimeModeButton.classList.add('active');
+    textModeButton.classList.remove('active');
+  });
+
+  historyToggleButton.addEventListener('click', () => {
+    chatHistory.style.display = chatHistory.style.display === 'block' ? 'none' : 'block';
+  });
+
+  function addToHistory(message) {
+    if (!message.trim()) return;
+    messageHistory.push(message);
+    const item = document.createElement('div');
+    item.textContent = message.slice(0, 30) + (message.length > 30 ? '...' : '');
+    item.onclick = () => { userInput.value = message; };
+    chatHistory.appendChild(item);
   }
 
-  userInput.value = '';
-}
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const message = userInput.value;
+    const token = localStorage.getItem('atk');
+    if (!token) return alert('로그인 후 이용해주세요.');
+    sendMessage(message, token);
+  });
 
-function displayResponse(message) {
+  async function sendMessage(message, token) {
+    if (!message.trim()) return;
+    addToHistory(message);
+
+    if (isRealtimeMode && socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ message: message })); // ✅ JSON으로 감싸기
+      return;
+    }
+
+    responseDiv.textContent = '응답을 기다리는 중...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/chatgpt/rest/completion/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: message })
+      });
+
+      const data = await res.json();
+      if (data.messages?.length > 0) {
+        displayResponse(data.messages[0].message);
+      } else {
+        responseDiv.textContent = 'messages 필드를 찾을 수 없습니다.';
+      }
+    } catch (err) {
+      responseDiv.textContent = '오류 발생: ' + err.message;
+    }
+
+    userInput.value = '';
+  }
+
+  function displayResponse(message) {
   responseDiv.innerHTML = '';
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
+  let lastIndex = 0, match;
 
   while ((match = codeRegex.exec(message)) !== null) {
     responseDiv.appendChild(document.createTextNode(message.slice(lastIndex, match.index)));
-
     const codeBlock = document.createElement('div');
     codeBlock.className = 'code-block';
 
@@ -204,26 +226,136 @@ function displayResponse(message) {
     copyButton.onclick = () => {
       navigator.clipboard.writeText(code).then(() => {
         copyButton.textContent = '복사됨!';
-        setTimeout(() => {
-          copyButton.textContent = '복사';
-        }, 2000);
+        setTimeout(() => { copyButton.textContent = '복사'; }, 2000);
       });
     };
     codeBlock.appendChild(copyButton);
     responseDiv.appendChild(codeBlock);
-
     lastIndex = codeRegex.lastIndex;
   }
 
-  responseDiv.appendChild(document.createTextNode(message.slice(lastIndex)));
+  const remainingText = convertMarkdownToHTML(message.slice(lastIndex));
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = remainingText;
+  responseDiv.appendChild(wrapper);
+
   document.querySelectorAll('pre code').forEach((block) => {
     if (typeof hljs !== 'undefined') {
       hljs.highlightElement(block);
     }
   });
 }
+  function convertMarkdownToHTML(markdown) {
+    return markdown
+      .replace(/→/g, '⇒')
+      .replace(/^###\s*(.+)$/gm, '<h3>$1</h3>')                 // 제목 (###)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')         // 볼드 (**텍스트**)
+      .replace(/^- (.+)$/gm, '<li>$1</li>')                     // 리스트 항목 (- 항목)
+      .replace(/(<li>.+<\/li>)/gs, '<ul>$1</ul>')               // li들을 <ul>로 감싸기
+      .replace(/([^\n.!?]+[.!?])/g, '<p>$1</p>');               // 일반 문장 <p>
+  }
+
+  function initSpeechRecognition() {
+  if (!('webkitSpeechRecognition' in window)) {
+    micButton.style.display = 'none';
+    return;
+  }
+
+  recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'ko-KR';
+
+  recognition.onresult = function (event) {
+    let interimTranscript = '', finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+      else interimTranscript += event.results[i][0].transcript;
+    }
+
+    const currentTranscript = finalTranscript || interimTranscript;
+    userInput.value = currentTranscript;
+
+    if (/(스크린샷|스샷)\s*$/i.test(currentTranscript.trim())) {
+      const cleaned = currentTranscript.replace(/(스크린샷|스샷)\s*$/ig, '').trim() || '이 이미지에 대해 설명해줘';
+      userInput.value = cleaned;
+      recognition.stop();
+      setTimeout(() => screenshotButton.click(), 300);
+      lastTranscript = '';
+      clearTimeout(silenceTimer);
+      return;
+    }
+
+    if (currentTranscript !== lastTranscript) {
+      lastTranscript = currentTranscript;
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (isRealtimeMode) {
+          const token = localStorage.getItem('atk');
+          if (token) sendMessage(currentTranscript, token);
+        }
+      }, 3000);
+    }
+  };
+
+  recognition.onend = () => {
+    micButton.classList.remove('listening');
+    isListening = false;
+    const token = localStorage.getItem('atk');
+
+    // WebSocket 종료
+    if (isRealtimeMode && socket && socket.readyState === WebSocket.OPEN) {
+      socket.close();
+    }
+
+    if (!isRealtimeMode && userInput.value.trim() && token) {
+      sendMessage(userInput.value, token);
+    }
+  };
+
+
+  recognition.onerror = (event) => {
+    console.error('음성 인식 오류:', event.error);
+    micButton.classList.remove('listening');
+    isListening = false;
+  };
+}
+
+function startVoiceRecognition() {
+  if (!recognition) return;
+  if (isListening) return recognition.stop();
+
+  micButton.classList.add('listening');
+  isListening = true;
+  userInput.value = '';
+  recognition.start();
+
+  const token = localStorage.getItem('atk');
+  if (isRealtimeMode && token) {
+    socket = new WebSocket(`${API_URL.replace(/^http/, 'ws')}/chat/stream?token=${token}`);
+    socket.onopen = () => console.log('WebSocket 연결 성공');
+    socket.onmessage = (event) => {
+      responseDiv.textContent += event.data;
+    };
+    socket.onerror = (error) => console.error('WebSocket 오류:', error);
+    socket.onclose = () => console.log('WebSocket 연결 종료');
+  }
+}
+
+micButton.addEventListener('click', async () => {
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    startVoiceRecognition();
+  } catch (err) {
+    console.log('❌ 마이크 권한 요청 실패: ' + err.message);
+  }
+});
 
 screenshotButton.addEventListener('click', () => {
+  const token = localStorage.getItem('atk');
+  if (!token) return alert('로그인 후 이용해주세요.');
+
   chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
     if (chrome.runtime.lastError) {
       alert('스크린샷 실패: ' + chrome.runtime.lastError.message);
@@ -232,15 +364,30 @@ screenshotButton.addEventListener('click', () => {
 
     const blob = dataURLtoBlob(dataUrl);
     const formData = new FormData();
-    formData.append('screenshot', blob, 'screenshot.png');
+    formData.append('image', blob, 'screenshot.png');
+    formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
 
-    fetch('http://localhost:9090/api/upload', {
+    fetch(`${API_URL}/api/chatgpt/rest/upload`, {
       method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
       body: formData
     })
-      .then((res) => res.text())
-      .then((result) => {
-        alert('✅ 업로드 성공: ' + result);
+      .then((res) => res.json())
+      .then((data) => {
+        chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              type: 'showScreenshot',
+              image: dataUrl
+            });
+          });
+        });
+
+        if (data.messages?.length > 0) {
+          displayResponse(data.messages[0].message);
+        } else {
+          responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+        }
       })
       .catch((err) => {
         alert('❌ 업로드 실패: ' + err.message);
@@ -255,5 +402,5 @@ function dataURLtoBlob(dataUrl) {
   return new Blob([u8arr], { type: mime });
 }
 
-// 초기화
 initSpeechRecognition();
+}); 
