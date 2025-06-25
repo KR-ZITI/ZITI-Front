@@ -10,15 +10,17 @@
 </head>
 <body>
   <div class="container">
-    <!-- 테마 토글 버튼 (좌측 상단) -->
+    <!-- 테마 토글 버튼 -->
     <button class="theme-toggle" id="themeToggle">
       <i class="fas fa-moon"></i>
     </button>
 
-    <!-- 사용자 아이콘 (우측 상단) -->
+    <!-- 계정 아이콘 -->
     <div class="account-icon" id="accountIcon">
       <i class="fas fa-user-circle"></i>
     </div>
+
+    <!-- 드롭다운 -->
     <div class="account-dropdown" id="accountDropdown">
       <div id="authSection">
         <input type="email" id="emailInput" placeholder="이메일" />
@@ -45,16 +47,20 @@
 
     <form id="chatForm">
       <div class="form-group">
-        <input type="text" id="userInput" placeholder="질문을 입력하세요..." required />
-        <button type="submit" id="submitButton">
-          <i class="fas fa-paper-plane"></i> 전송
-        </button>
-        <button type="button" id="screenshotButton">
-          <i class="fas fa-camera"></i> 스샷
-        </button>
-        <button type="button" id="historyToggleButton">
-          <i class="fas fa-history"></i> 대화 기록
-        </button>
+        <div class="input-group">
+          <input type="text" id="userInput" placeholder="질문을 입력하세요..." required />
+        </div>
+        <div class="button-row">
+          <button type="submit" id="submitButton">
+            <i class="fas fa-paper-plane"></i> 전송
+          </button>
+          <button type="button" id="screenshotButton">
+            <i class="fas fa-camera"></i> 스샷
+          </button>
+          <button type="button" id="historyToggleButton">
+            <i class="fas fa-history"></i> 대화 기록
+          </button>
+        </div>
       </div>
     </form>
 
@@ -62,7 +68,6 @@
     <div id="response"></div>
   </div>
 
- <!-- 바디 맨 아래 -->
-<script src="popup.js"></script>
+  <script src="popup.js"></script>
 </body>
 </html>

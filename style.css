@@ -46,8 +46,8 @@ body {
 }
 
 .container {
-  max-width: 600px;
   width: 100%;
+  max-width: 900px;
   padding: 30px 25px;
   border-radius: 16px;
   background-color: var(--container-bg);
@@ -55,6 +55,13 @@ body {
   position: relative;
   text-align: center;
   transition: all 0.3s ease;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 h1 {
@@ -210,11 +217,79 @@ h1 {
   box-shadow: 0 0 15px rgba(107, 95, 255, 0.4);
 }
 
-.form-group {
+.input-group {
   display: flex;
+  width: 100%;
+}
+
+.input-group input[type="text"] {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 14px;
+  background-color: var(--container-bg);
+  color: var(--text-color);
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.button-group button {
+  flex: unset;
+  width: 100px;   /* ✅ 고정 너비 */
+  padding: 10px 0;
+  font-size: 14px;
+  border-radius: 10px;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.button-group button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(107, 95, 255, 0.3);
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
-  margin: 20px 0 10px;
+  margin-top: 14px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.button-row button {
+  flex: 1;
+  min-width: 0;
+  max-width: 130px;
+  padding: 10px 0;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background 0.3s ease;
+}
+
+.button-row button:hover {
+  background: var(--primary-hover);
 }
 
 input[type="text"] {
@@ -371,6 +446,23 @@ button:hover,
 
 strong {
   font-weight: 700; /* 일반적으로 bold는 700 */
+}
+
+.chat-history-item {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+.chat-question {
+  font-weight: bold;
+}
+.chat-answer {
+  margin: 4px 0;
+  color: #444;
+}
+.chat-date {
+  font-size: 0.8em;
+  color: gray;
 }
 
 @keyframes shrinkAndFade {

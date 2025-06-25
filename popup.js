@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const API_URL = 'https://quarrelsome-imojean-beargame-76ebfcd2.koyeb.app';
+  // const API_URL = 'http://localhost:9090'
 
   const themeToggle = document.getElementById('themeToggle');
   const themeIcon = themeToggle.querySelector('i');
@@ -46,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyToggleButton = document.getElementById('historyToggleButton');
   const chatHistory = document.getElementById('chatHistory');
 
+  let originalResponseHTML = '';
   let isRealtimeMode = false;
   let isListening = false;
   let recognition, socket, silenceTimer, lastTranscript = '';
@@ -140,18 +142,81 @@ document.addEventListener("DOMContentLoaded", () => {
     textModeButton.classList.remove('active');
   });
 
-  historyToggleButton.addEventListener('click', () => {
-    chatHistory.style.display = chatHistory.style.display === 'block' ? 'none' : 'block';
-  });
+  let isHistoryVisible = false;
 
-  function addToHistory(message) {
-    if (!message.trim()) return;
-    messageHistory.push(message);
-    const item = document.createElement('div');
-    item.textContent = message.slice(0, 30) + (message.length > 30 ? '...' : '');
-    item.onclick = () => { userInput.value = message; };
-    chatHistory.appendChild(item);
+  historyToggleButton.addEventListener('click', () => {
+  isHistoryVisible = !isHistoryVisible;
+
+  if (isHistoryVisible) {
+    chatHistory.style.display = 'block';
+    chatHistory.innerHTML = '';
+    loadChatHistoryFromServer();
+    responseDiv.innerHTML = ''; // 대화 기록 열 때 기존 응답 제거
+  } else {
+    chatHistory.style.display = 'none';
+    responseDiv.innerHTML = originalResponseHTML; // 복원
   }
+});
+
+
+  function addToHistory(question, answer, createdAt, isFromServer = false) {
+  if (!question.trim()) return;
+  if (!isFromServer) messageHistory.push(question);
+
+  const item = document.createElement('div');
+  item.className = 'chat-history-item';
+  item.textContent = question.slice(0, 30) + (question.length > 30 ? '...' : '');
+
+  item.onclick = () => {
+    displayAnswerDetail(question, answer, createdAt);
+  };
+
+  chatHistory.appendChild(item);
+}
+
+function displayAnswerDetail(question, answer, createdAt) {
+  responseDiv.innerHTML = '';
+
+  const q = document.createElement('div');
+  q.innerHTML = `<strong>Q:</strong> ${question}`;
+  q.style.marginBottom = '8px';
+  responseDiv.appendChild(q);
+
+  // 👉 기존 displayResponse 사용: 답변만 렌더링
+  displayResponse(answer);
+
+  const date = document.createElement('div');
+  date.textContent = new Date(createdAt).toLocaleString();
+  date.style.fontSize = '0.8em';
+  date.style.color = 'gray';
+  date.style.marginTop = '8px';
+  responseDiv.appendChild(date);
+}
+
+  async function loadChatHistoryFromServer() {
+  const token = localStorage.getItem('atk');
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/chatgpt/rest/history`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    console.log(data);
+    if (!Array.isArray(data.list)) return;
+
+    data.list.forEach(({ question, answer, createdAt }) => {
+      addToHistory(question, answer, createdAt, true); // ✅ 올바른 인자 전달
+    });
+  } catch (err) {
+    console.error('히스토리 불러오기 실패:', err);
+  }
+}
+
 
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -163,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function sendMessage(message, token) {
     if (!message.trim()) return;
-    addToHistory(message);
 
     if (isRealtimeMode && socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ message: message })); // ✅ JSON으로 감싸기
@@ -403,4 +467,5 @@ function dataURLtoBlob(dataUrl) {
 }
 
 initSpeechRecognition();
+originalResponseHTML = responseDiv.innerHTML;
 }); 
