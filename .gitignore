@@ -1,0 +1,11 @@
+# 빌드 결과물 무시
+dist/
+*.zip
+*.dmg
+
+# node_modules 무시
+node_modules/
+my-app/node_modules/
+
+# 기타
+.DS_Store
