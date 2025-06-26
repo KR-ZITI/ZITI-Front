@@ -478,6 +478,35 @@ strong {
   cursor: pointer;
 }
 
+#uploadOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 30, 0.75);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-message {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 @keyframes shrinkAndFade {
   0% {
     opacity: 1;

@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const API_URL = 'https://quarrelsome-imojean-beargame-76ebfcd2.koyeb.app';
   // const API_URL = 'http://localhost:9090'
 
+  const uploadOverlay = document.getElementById('uploadOverlay');
+
   const themeToggle = document.getElementById('themeToggle');
   const themeIcon = themeToggle.querySelector('i');
 
@@ -304,6 +306,9 @@ function displayAnswerDetail(question, answer, createdAt) {
   wrapper.innerHTML = remainingText;
   responseDiv.appendChild(wrapper);
 
+  // ✅ 오버레이 종료 시점
+  hideOverlay();
+
   document.querySelectorAll('pre code').forEach((block) => {
     if (typeof hljs !== 'undefined') {
       hljs.highlightElement(block);
@@ -418,7 +423,7 @@ micButton.addEventListener('click', async () => {
   }
 });
 
-screenshotButton.addEventListener('click', async() => {
+screenshotButton.addEventListener('click', async () => {
   const token = await getValidAccessToken();
   if (!token) return alert('로그인 후 이용해주세요.');
 
@@ -432,6 +437,8 @@ screenshotButton.addEventListener('click', async() => {
     const formData = new FormData();
     formData.append('image', blob, 'screenshot.png');
     formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
+
+    showOverlay(); // ✅ 스샷 전송 전에 오버레이 표시
 
     fetch(`${API_URL}/api/chatgpt/rest/upload`, {
       method: 'POST',
@@ -450,13 +457,15 @@ screenshotButton.addEventListener('click', async() => {
         });
 
         if (data.messages?.length > 0) {
-          displayResponse(data.messages[0].message);
+          displayResponse(data.messages[0].message); // ✅ 내부에서 hideOverlay() 호출됨
         } else {
           responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+          hideOverlay(); // ✅ 예외적으로 직접 제거
         }
       })
       .catch((err) => {
         alert('❌ 업로드 실패: ' + err.message);
+        hideOverlay(); // ✅ 실패 시 오버레이 제거
       });
   });
 });
@@ -536,53 +545,86 @@ document.getElementById('openFullPage').addEventListener('click', () => {
   });
 });
 
-document.addEventListener('paste', async (event) => {
-  const clipboardItems = event.clipboardData?.items;
-  if (!clipboardItems) return;
+document.addEventListener('paste', handlePasteOrDrop);
+document.addEventListener('drop', handlePasteOrDrop);
+document.addEventListener('dragover', (e) => e.preventDefault());
 
-  for (const item of clipboardItems) {
-    if (item.type.indexOf('image') === 0) {
-      const blob = item.getAsFile();
-      if (!blob) continue;
+function showOverlay() {
+  if (!uploadOverlay) {
+    console.warn('⚠️ uploadOverlay 요소를 찾을 수 없습니다.');
+    return;
+  }
+  console.log("실행됨");
+  uploadOverlay.style.display = 'flex';
+}
 
-      const token = await getValidAccessToken();
-      if (!token) {
-        alert('로그인 후 이용해주세요.');
-        return;
+
+function hideOverlay() {
+  if (uploadOverlay) uploadOverlay.style.display = 'none';
+}
+
+
+function handlePasteOrDrop(event) {
+  event.preventDefault();
+
+  const items = event.clipboardData?.items || event.dataTransfer?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        showOverlay();               // ✅ 여기에 확실하게 오버레이 띄우기
+        uploadImageFile(file);
+        break;
       }
-
-      const formData = new FormData();
-      formData.append('image', blob, 'clipboard.png');
-      formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
-
-      fetch(`${API_URL}/api/chatgpt/rest/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.messages?.length > 0) {
-            displayResponse(data.messages[0].message);
-          } else {
-            responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
-          }
-
-          // 이미지 미리보기 표시
-          const imageURL = URL.createObjectURL(blob);
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, {
-              type: 'showScreenshot',
-              image: imageURL
-            });
-          });
-        })
-        .catch((err) => {
-          alert('❌ 이미지 업로드 실패: ' + err.message);
-        });
     }
   }
-});
+}
+
+async function uploadImageFile(file) {
+  const token = await getValidAccessToken();
+  if (!token) return alert('로그인 후 이용해주세요.');
+
+  // ❌ showOverlay(); <= 여기 제거
+
+  const formData = new FormData();
+  formData.append('image', file, 'uploaded.png');
+  formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
+
+  try {
+    const res = await fetch(`${API_URL}/api/chatgpt/rest/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const dataUrl = reader.result;
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'showScreenshot',
+          image: dataUrl
+        });
+      });
+    };
+    reader.readAsDataURL(file);
+
+    if (data.messages?.length > 0) {
+      displayResponse(data.messages[0].message); // ✅ 이 안에서 hideOverlay() 됨
+    } else {
+      responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+      hideOverlay(); // ✅ 예외 경우에도 수동 제거
+    }
+  } catch (err) {
+    alert('❌ 이미지 업로드 실패: ' + err.message);
+    hideOverlay(); // ✅ 예외 발생 시에도 제거
+  }
+}
+
 
 initSpeechRecognition();
 originalResponseHTML = responseDiv.innerHTML;
