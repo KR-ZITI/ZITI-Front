@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const accountIcon = document.getElementById("accountIcon");
   const accountDropdown = document.getElementById("accountDropdown");
 
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accountDropdown.classList.toggle('show');
   });
 
-  const token = localStorage.getItem('atk');
+  const token = await getValidAccessToken();
   const email = localStorage.getItem('email');
   if (token && email) {
     authSection.style.display = 'none';
@@ -194,8 +194,8 @@ function displayAnswerDetail(question, answer, createdAt) {
 }
 
   async function loadChatHistoryFromServer() {
-  const token = localStorage.getItem('atk');
-  if (!token) return;
+  const token = await getValidAccessToken();
+    if (!token) return;
 
   try {
     const res = await fetch(`${API_URL}/api/chatgpt/rest/history`, {
@@ -218,11 +218,11 @@ function displayAnswerDetail(question, answer, createdAt) {
 }
 
 
-  chatForm.addEventListener('submit', (e) => {
+  chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const message = userInput.value;
-    const token = localStorage.getItem('atk');
-    if (!token) return alert('로그인 후 이용해주세요.');
+    const token = await getValidAccessToken();
+    if (!token) return;
     sendMessage(message, token);
   });
 
@@ -331,42 +331,44 @@ function displayAnswerDetail(question, answer, createdAt) {
   recognition.interimResults = true;
   recognition.lang = 'ko-KR';
 
-  recognition.onresult = function (event) {
-    let interimTranscript = '', finalTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-      else interimTranscript += event.results[i][0].transcript;
-    }
+  recognition.onresult = async function (event) {
+  let interimTranscript = '', finalTranscript = '';
+  for (let i = event.resultIndex; i < event.results.length; ++i) {
+    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+    else interimTranscript += event.results[i][0].transcript;
+  }
 
-    const currentTranscript = finalTranscript || interimTranscript;
-    userInput.value = currentTranscript;
+  const currentTranscript = finalTranscript || interimTranscript;
+  userInput.value = currentTranscript;
 
-    if (/(스크린샷|스샷)\s*$/i.test(currentTranscript.trim())) {
-      const cleaned = currentTranscript.replace(/(스크린샷|스샷)\s*$/ig, '').trim() || '이 이미지에 대해 설명해줘';
-      userInput.value = cleaned;
-      recognition.stop();
-      setTimeout(() => screenshotButton.click(), 300);
-      lastTranscript = '';
-      clearTimeout(silenceTimer);
-      return;
-    }
+  if (/(스크린샷|스샷)\s*$/i.test(currentTranscript.trim())) {
+    const cleaned = currentTranscript.replace(/(스크린샷|스샷)\s*$/ig, '').trim() || '이 이미지에 대해 설명해줘';
+    userInput.value = cleaned;
+    recognition.stop();
+    setTimeout(() => screenshotButton.click(), 300);
+    lastTranscript = '';
+    clearTimeout(silenceTimer);
+    return;
+  }
 
-    if (currentTranscript !== lastTranscript) {
-      lastTranscript = currentTranscript;
-      clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(() => {
-        if (isRealtimeMode) {
-          const token = localStorage.getItem('atk');
-          if (token) sendMessage(currentTranscript, token);
-        }
-      }, 3000);
-    }
-  };
+  if (currentTranscript !== lastTranscript) {
+    lastTranscript = currentTranscript;
+    clearTimeout(silenceTimer);
 
-  recognition.onend = () => {
+    silenceTimer = setTimeout(async () => {
+      if (isRealtimeMode) {
+        const token = await getValidAccessToken(); // ✅ 여기 변경
+        if (token) sendMessage(currentTranscript, token);
+      }
+    }, 3000);
+  }
+};
+
+
+  recognition.onend = async () => {
     micButton.classList.remove('listening');
     isListening = false;
-    const token = localStorage.getItem('atk');
+    const token = await getValidAccessToken();
 
     // WebSocket 종료
     if (isRealtimeMode && socket && socket.readyState === WebSocket.OPEN) {
@@ -386,7 +388,7 @@ function displayAnswerDetail(question, answer, createdAt) {
   };
 }
 
-function startVoiceRecognition() {
+async function startVoiceRecognition() {
   if (!recognition) return;
   if (isListening) return recognition.stop();
 
@@ -395,7 +397,7 @@ function startVoiceRecognition() {
   userInput.value = '';
   recognition.start();
 
-  const token = localStorage.getItem('atk');
+  const token = await getValidAccessToken();
   if (isRealtimeMode && token) {
     socket = new WebSocket(`${API_URL.replace(/^http/, 'ws')}/chat/stream?token=${token}`);
     socket.onopen = () => console.log('WebSocket 연결 성공');
@@ -416,8 +418,8 @@ micButton.addEventListener('click', async () => {
   }
 });
 
-screenshotButton.addEventListener('click', () => {
-  const token = localStorage.getItem('atk');
+screenshotButton.addEventListener('click', async() => {
+  const token = await getValidAccessToken();
   if (!token) return alert('로그인 후 이용해주세요.');
 
   chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
@@ -465,6 +467,70 @@ function dataURLtoBlob(dataUrl) {
   for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
   return new Blob([u8arr], { type: mime });
 }
+
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getValidAccessToken() {
+  let token = localStorage.getItem('atk');
+  const refreshToken = localStorage.getItem('rtk');
+  const email = localStorage.getItem('email');
+
+  // 토큰 유효성 검사
+  if (token) {
+    const payload = parseJwt(token);
+    const now = Math.floor(Date.now() / 1000);
+
+    if (payload && payload.exp > now + 10) {
+      // 유효 시간 10초 이상 남았으면 그대로 사용
+      return token;
+    }
+  }
+
+  // 재발급 조건: refreshToken과 email이 있어야 함
+  if (!refreshToken || !email) {
+    alert('로그인이 필요합니다.');
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/auth/reissue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rtk: refreshToken, email })
+    });
+
+    if (!res.ok) throw new Error('재발급 실패');
+
+    const data = await res.json();
+    localStorage.setItem('atk', data.atk);
+    return data.atk;
+  } catch (err) {
+    console.error('access token 재발급 실패:', err.message);
+    alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+    localStorage.removeItem('atk');
+    localStorage.removeItem('rtk');
+    localStorage.removeItem('email');
+    authSection.style.display = 'block';
+    userSection.style.display = 'none';
+    return null;
+  }
+}
+
+
 
 initSpeechRecognition();
 originalResponseHTML = responseDiv.innerHTML;
