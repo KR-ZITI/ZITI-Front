@@ -11,7 +11,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile('popup.html'); // ← 기존 popup.html을 로드
+  win.loadFile('computer.html'); 
 }
 
 app.whenReady().then(createWindow);
