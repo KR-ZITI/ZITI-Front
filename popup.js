@@ -536,6 +536,54 @@ document.getElementById('openFullPage').addEventListener('click', () => {
   });
 });
 
+document.addEventListener('paste', async (event) => {
+  const clipboardItems = event.clipboardData?.items;
+  if (!clipboardItems) return;
+
+  for (const item of clipboardItems) {
+    if (item.type.indexOf('image') === 0) {
+      const blob = item.getAsFile();
+      if (!blob) continue;
+
+      const token = await getValidAccessToken();
+      if (!token) {
+        alert('로그인 후 이용해주세요.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', blob, 'clipboard.png');
+      formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
+
+      fetch(`${API_URL}/api/chatgpt/rest/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.messages?.length > 0) {
+            displayResponse(data.messages[0].message);
+          } else {
+            responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+          }
+
+          // 이미지 미리보기 표시
+          const imageURL = URL.createObjectURL(blob);
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              type: 'showScreenshot',
+              image: imageURL
+            });
+          });
+        })
+        .catch((err) => {
+          alert('❌ 이미지 업로드 실패: ' + err.message);
+        });
+    }
+  }
+});
+
 initSpeechRecognition();
 originalResponseHTML = responseDiv.innerHTML;
 }); 
