@@ -36,13 +36,16 @@
   }
   ],
   "web_accessible_resources": [
-    {
-      "resources": [
-        "libs/highlight.min.js",
-        "libs/github.min.css",
-        "icons/*.png"
-      ],
-      "matches": ["<all_urls>"]
-    }
+  {
+    "resources": [
+      "fullpage.html",
+      "style.css",
+      "popup.js",
+      "libs/highlight.min.js",
+      "libs/github.min.css",
+      "icons/*.png"
+    ],
+    "matches": ["<all_urls>"]
+  }
   ]
 }

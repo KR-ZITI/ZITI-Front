@@ -465,6 +465,19 @@ strong {
   color: gray;
 }
 
+#openFullPage {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 @keyframes shrinkAndFade {
   0% {
     opacity: 1;

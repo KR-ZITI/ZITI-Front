@@ -530,7 +530,11 @@ async function getValidAccessToken() {
   }
 }
 
-
+document.getElementById('openFullPage').addEventListener('click', () => {
+  chrome.tabs.create({
+    url: chrome.runtime.getURL('fullpage.html')
+  });
+});
 
 initSpeechRecognition();
 originalResponseHTML = responseDiv.innerHTML;

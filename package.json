@@ -1,0 +1,30 @@
+{
+  "name": "ziti-desktop",
+  "version": "1.0.0",
+  "description": "ZITI 데스크탑 앱입니다.",
+  "author": "beargame",
+  "main": "main.js",
+  "build": {
+    "appId": "com.ziti.desktop",
+    "productName": "ZITI",
+    "files": [
+      "**/*"
+    ],
+    "mac": {
+    "icon": "icons/icon512.png", 
+    "target": ["dmg", "zip"]
+    },
+    "win": {
+        "icon": "icons/icon512.png", 
+        "target": ["nsis", "zip"]
+    }
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "npx electron-builder"
+  },
+  "devDependencies": {
+  "electron": "27.1.0",
+  "electron-builder": "24.6.0"
+  }
+}
