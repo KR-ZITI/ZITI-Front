@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const API_URL = 'https://quarrelsome-imojean-beargame-76ebfcd2.koyeb.app';
   // const API_URL = 'http://localhost:9090'
 
+  const uploadOverlay = document.getElementById('uploadOverlay');
+
   const themeToggle = document.getElementById('themeToggle');
   const themeIcon = themeToggle.querySelector('i');
 
@@ -44,11 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const textModeButton = document.getElementById('textModeButton');
   const realtimeModeButton = document.getElementById('realtimeModeButton');
   const screenshotButton = document.getElementById('screenshotButton');
-  const imageUploadInput = document.createElement('input');
-  imageUploadInput.type = 'file';
-  imageUploadInput.accept = 'image/*';
-  imageUploadInput.style.display = 'none';
-  document.body.appendChild(imageUploadInput);
   const historyToggleButton = document.getElementById('historyToggleButton');
   const chatHistory = document.getElementById('chatHistory');
 
@@ -57,6 +54,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isListening = false;
   let recognition, socket, silenceTimer, lastTranscript = '';
   const messageHistory = [];
+
+  let pendingImageFile = null;
 
   function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
@@ -232,37 +231,51 @@ function displayAnswerDetail(question, answer, createdAt) {
   });
 
   async function sendMessage(message, token) {
-    if (!message.trim()) return;
+  if (!message.trim() && !pendingImageFile) return;
 
-    if (isRealtimeMode && socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ message: message })); // ✅ JSON으로 감싸기
-      return;
-    }
+  try {
+    let response;
 
-    responseDiv.textContent = '응답을 기다리는 중...';
+    if (pendingImageFile) {
+      showOverlay('🖼 이미지 분석 중... 잠시만 기다려주세요.');
 
-    try {
-      const res = await fetch(`${API_URL}/api/chatgpt/rest/completion/chat`, {
+      const formData = new FormData();
+      formData.append('message', message || '이 이미지에 대해 설명해줘');
+      formData.append('image', pendingImageFile, pendingImageFile.name || 'uploaded.png');
+
+      response = await fetch(`${API_URL}/api/chatgpt/rest/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+    } else {
+      showOverlay('💬 채팅을 분석 중입니다...');
+
+      response = await fetch(`${API_URL}/api/chatgpt/rest/completion/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: message })
+        body: JSON.stringify({ message })
       });
-
-      const data = await res.json();
-      if (data.messages?.length > 0) {
-        displayResponse(data.messages[0].message);
-      } else {
-        responseDiv.textContent = 'messages 필드를 찾을 수 없습니다.';
-      }
-    } catch (err) {
-      responseDiv.textContent = '오류 발생: ' + err.message;
     }
 
+    const data = await response.json();
+
+    if (data.messages?.length > 0) {
+      displayResponse(data.messages[0].message);
+    } else {
+      responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+    }
+  } catch (err) {
+    responseDiv.textContent = '❌ 오류 발생: ' + err.message;
+  } finally {
     userInput.value = '';
+    pendingImageFile = null;
+    hideOverlay();
   }
+}
 
   function displayResponse(message) {
   responseDiv.innerHTML = '';
@@ -308,6 +321,9 @@ function displayAnswerDetail(question, answer, createdAt) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = remainingText;
   responseDiv.appendChild(wrapper);
+
+  // ✅ 오버레이 종료 시점
+  hideOverlay();
 
   document.querySelectorAll('pre code').forEach((block) => {
     if (typeof hljs !== 'undefined') {
@@ -428,49 +444,13 @@ screenshotButton.addEventListener('click', () => {
   imageUploadInput.click();
 });
 
-imageUploadInput.addEventListener('change', async (event) => {
-  console.log('🖼️ 파일 선택됨');
-
-  const token = await getValidAccessToken();
-  if (!token) {
-    alert('로그인 후 이용해주세요.');
-    return;
-  }
-
+imageUploadInput.addEventListener('change', (event) => {
   const file = event.target.files[0];
-  if (!file) {
-    alert('파일이 선택되지 않았습니다.');
-    return;
-  }
+  if (!file) return alert('파일이 선택되지 않았습니다.');
 
-  console.log('📂 선택된 파일:', file);
-  alert("파일이 선택되었습니다! 조금만 기다려주세요!!")
-
-  const formData = new FormData();
-  formData.append('image', file, file.name);
-  formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
-
-  try {
-    const res = await fetch(`${API_URL}/api/chatgpt/rest/upload`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    const data = await res.json();
-    console.log('📨 업로드 응답:', data);
-
-    if (data.messages?.length > 0) {
-      displayResponse(data.messages[0].message);
-    } else {
-      responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
-    }
-  } catch (err) {
-    console.error('❌ 업로드 실패:', err.message);
-    alert('❌ 업로드 실패: ' + err.message);
-  }
+  pendingImageFile = file; // ❗보관만 하고
+  previewImage(file);      // ❗미리보기만 보여줌
+  alert('🖼 이미지가 선택되었습니다. 질문과 함께 전송하세요.');
 });
 
 function dataURLtoBlob(dataUrl) {
@@ -540,6 +520,106 @@ async function getValidAccessToken() {
     userSection.style.display = 'none';
     return null;
   }
+}
+
+document.getElementById('openFullPage').addEventListener('click', () => {
+  chrome.tabs.create({
+    url: chrome.runtime.getURL('fullpage.html')
+  });
+});
+
+document.addEventListener('paste', handlePasteOrDrop);
+document.addEventListener('drop', handlePasteOrDrop);
+document.addEventListener('dragover', (e) => e.preventDefault());
+
+function showOverlay(text = '🖼 이미지 분석 중... 잠시만 기다려주세요.') {
+  if (!uploadOverlay) return;
+  const msg = uploadOverlay.querySelector('.upload-message');
+  if (msg) msg.textContent = text;
+  uploadOverlay.style.display = 'flex';
+}
+
+function hideOverlay() {
+  if (uploadOverlay) uploadOverlay.style.display = 'none';
+}
+
+
+function handlePasteOrDrop(event) {
+  event.preventDefault();
+  const items = event.clipboardData?.items || event.dataTransfer?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        showOverlay();
+        pendingImageFile = file;
+        previewImage(file);  // 사용자에게 미리 보여줄 수 있음 (옵션)
+        hideOverlay();
+        break;
+      }
+    }
+  }
+}
+
+async function uploadImageFile(file) {
+  const token = await getValidAccessToken();
+  if (!token) return alert('로그인 후 이용해주세요.');
+
+  // ❌ showOverlay(); <= 여기 제거
+
+  const formData = new FormData();
+  formData.append('image', file, 'uploaded.png');
+  formData.append('message', userInput.value || '이 이미지에 대해 설명해줘');
+
+  try {
+    const res = await fetch(`${API_URL}/api/chatgpt/rest/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const dataUrl = reader.result;
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'showScreenshot',
+          image: dataUrl
+        });
+      });
+    };
+    reader.readAsDataURL(file);
+
+    if (data.messages?.length > 0) {
+      displayResponse(data.messages[0].message); // ✅ 이 안에서 hideOverlay() 됨
+    } else {
+      responseDiv.textContent = 'ChatGPT 응답이 비어 있습니다.';
+      hideOverlay(); // ✅ 예외 경우에도 수동 제거
+    }
+  } catch (err) {
+    alert('❌ 이미지 업로드 실패: ' + err.message);
+    hideOverlay(); // ✅ 예외 발생 시에도 제거
+  }
+}
+
+function previewImage(file) {
+  const reader = new FileReader();
+  reader.onload = function () {
+    const dataUrl = reader.result;
+    console.log('🖼 미리보기 URL:', dataUrl);  // ✅ 확인
+    const preview = document.getElementById('imagePreview');
+    if (preview) {
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+    } else {
+      console.warn('⚠️ imagePreview 요소 없음');
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 initSpeechRecognition();
